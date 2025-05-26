@@ -60,12 +60,11 @@ static inline void set_microros_net_transports(IPAddress agent_ip, uint16_t agen
 
     rmw_uros_set_custom_transport(
         false,
-        (void *) &locator,
+        (void *)&locator,
         platformio_transport_open,
         platformio_transport_close,
         platformio_transport_write,
-        platformio_transport_read
-    );
+        platformio_transport_read);
 }
 #endif
 
@@ -90,16 +89,38 @@ static inline void set_microros_net_transports(IPAddress agent_ip, uint16_t agen
 #endif
 
 #ifndef RCCHECK
-#define RCCHECK(fn) { rcl_ret_t temp_rc = fn; if((temp_rc != RCL_RET_OK)){rclErrorLoop();}}
+#define RCCHECK(fn)                  \
+    {                                \
+        rcl_ret_t temp_rc = fn;      \
+        if ((temp_rc != RCL_RET_OK)) \
+        {                            \
+            rclErrorLoop();          \
+        }                            \
+    }
 #endif
 #ifndef RCSOFTCHECK
-#define RCSOFTCHECK(fn) { rcl_ret_t temp_rc = fn; if((temp_rc != RCL_RET_OK)){}}
+#define RCSOFTCHECK(fn)              \
+    {                                \
+        rcl_ret_t temp_rc = fn;      \
+        if ((temp_rc != RCL_RET_OK)) \
+        {                            \
+        }                            \
+    }
 #endif
-#define EXECUTE_EVERY_N_MS(MS, X)  do { \
-  static volatile int64_t init = -1; \
-  if (init == -1) { init = uxr_millis();} \
-  if (uxr_millis() - init > MS) { X; init = uxr_millis();} \
-} while (0)
+#define EXECUTE_EVERY_N_MS(MS, X)          \
+    do                                     \
+    {                                      \
+        static volatile int64_t init = -1; \
+        if (init == -1)                    \
+        {                                  \
+            init = uxr_millis();           \
+        }                                  \
+        if (uxr_millis() - init > MS)      \
+        {                                  \
+            X;                             \
+            init = uxr_millis();           \
+        }                                  \
+    } while (0)
 
 rcl_publisher_t odom_publisher;
 rcl_publisher_t imu_publisher;
@@ -128,10 +149,10 @@ float prev_voltage;
 
 enum states
 {
-  WAITING_AGENT,
-  AGENT_AVAILABLE,
-  AGENT_CONNECTED,
-  AGENT_DISCONNECTED
+    WAITING_AGENT,
+    AGENT_AVAILABLE,
+    AGENT_CONNECTED,
+    AGENT_DISCONNECTED
 } state;
 
 Encoder motor1_encoder(MOTOR1_ENCODER_A, MOTOR1_ENCODER_B, COUNTS_PER_REV1, MOTOR1_ENCODER_INV);
@@ -156,16 +177,15 @@ Kinematics kinematics(
     MOTOR_OPERATING_VOLTAGE,
     MOTOR_POWER_MAX_VOLTAGE,
     WHEEL_DIAMETER,
-    LR_WHEELS_DISTANCE
-);
+    LR_WHEELS_DISTANCE);
 
 Odometry odometry;
-IMU imu;
+IMU imu_sensor;
 MAG mag;
 
 void flashLED(int n_times)
 {
-    for(int i=0; i<n_times; i++)
+    for (int i = 0; i < n_times; i++)
     {
         setLed(HIGH);
         delay(150);
@@ -189,7 +209,7 @@ void fullStop()
 
 void rclErrorLoop()
 {
-    while(true)
+    while (true)
     {
         flashLED(2); // flash 2 times
         runOta();
@@ -199,7 +219,7 @@ void rclErrorLoop()
 void moveBase()
 {
     // brake if there's no command received, or when it's only the first command sent
-    if(((millis() - prev_cmd_time) >= 200))
+    if (((millis() - prev_cmd_time) >= 200))
     {
         twist_msg.linear.x = 0.0;
         twist_msg.linear.y = 0.0;
@@ -210,8 +230,7 @@ void moveBase()
     Kinematics::rpm req_rpm = kinematics.getRPM(
         twist_msg.linear.x,
         twist_msg.linear.y,
-        twist_msg.angular.z
-    );
+        twist_msg.angular.z);
 
     // get the current speed of each motor
     float current_rpm1 = motor1_encoder.getRPM();
@@ -230,8 +249,7 @@ void moveBase()
         current_rpm1,
         current_rpm2,
         current_rpm3,
-        current_rpm4
-    );
+        current_rpm4);
 
     unsigned long now = millis();
     float vel_dt = (now - prev_odom_update) / 1000.0;
@@ -240,30 +258,31 @@ void moveBase()
         vel_dt,
         current_vel.linear_x,
         current_vel.linear_y,
-        current_vel.angular_z
-    );
+        current_vel.angular_z);
 }
 
 bool syncTime()
 {
     const int timeout_ms = 1000;
-    if (rmw_uros_epoch_synchronized()) return true; // synchronized previously
+    if (rmw_uros_epoch_synchronized())
+        return true; // synchronized previously
     // get the current time from the agent
     RCCHECK(rmw_uros_sync_session(timeout_ms));
-    if (rmw_uros_epoch_synchronized()) {
+    if (rmw_uros_epoch_synchronized())
+    {
 #if (_POSIX_TIMERS > 0)
         // Get time in milliseconds or nanoseconds
         int64_t time_ns = rmw_uros_epoch_nanos();
-    timespec tp;
-    tp.tv_sec = time_ns / 1000000000;
-    tp.tv_nsec = time_ns % 1000000000;
-    clock_settime(CLOCK_REALTIME, &tp);
+        timespec tp;
+        tp.tv_sec = time_ns / 1000000000;
+        tp.tv_nsec = time_ns % 1000000000;
+        clock_settime(CLOCK_REALTIME, &tp);
 #else
-    unsigned long long ros_time_ms = rmw_uros_epoch_millis();
-    // now we can find the difference between ROS time and uC time
-    time_offset = ros_time_ms - millis();
+        unsigned long long ros_time_ms = rmw_uros_epoch_millis();
+        // now we can find the difference between ROS time and uC time
+        time_offset = ros_time_ms - millis();
 #endif
-    return true;
+        return true;
     }
     return false;
 }
@@ -283,7 +302,7 @@ struct timespec getTime()
     return tp;
 }
 
-void twistCallback(const void * msgin)
+void twistCallback(const void *msgin)
 {
     setLed(!getLed());
 
@@ -305,7 +324,7 @@ void publishData()
 {
     static unsigned skip_dip = 0;
     odom_msg = odometry.getData();
-    imu_msg = imu.getData();
+    imu_msg = imu_sensor.getData();
 #ifdef USE_FAKE_IMU
     imu_msg.angular_velocity.z = odom_msg.twist.twist.angular.z;
 #endif
@@ -340,12 +359,14 @@ void publishData()
     battery_msg.header.stamp.sec = time_stamp.tv_sec;
     battery_msg.header.stamp.nanosec = time_stamp.tv_nsec;
 #ifdef BATTERY_DIP
-    if (!skip_dip && battery_msg.voltage > 1.0  && battery_msg.voltage < prev_voltage * BATTERY_DIP) {
+    if (!skip_dip && battery_msg.voltage > 1.0 && battery_msg.voltage < prev_voltage * BATTERY_DIP)
+    {
         RCSOFTCHECK(rcl_publish(&battery_publisher, &battery_msg, NULL));
-    syslog(LOG_WARNING, "%s voltage dip %.2f", __FUNCTION__, battery_msg.voltage);
+        syslog(LOG_WARNING, "%s voltage dip %.2f", __FUNCTION__, battery_msg.voltage);
         skip_dip = 5;
     }
-    if (skip_dip) skip_dip--;
+    if (skip_dip)
+        skip_dip--;
 #endif
     battery_msg.voltage = prev_voltage = battery_msg.voltage * 0.01 + prev_voltage * 0.99;
     EXECUTE_EVERY_N_MS(BATTERY_TIMER, {
@@ -361,13 +382,13 @@ void publishData()
 #endif
 }
 
-void controlCallback(rcl_timer_t * timer, int64_t last_call_time)
+void controlCallback(rcl_timer_t *timer, int64_t last_call_time)
 {
     RCLC_UNUSED(last_call_time);
     if (timer != NULL)
     {
-       moveBase();
-       publishData();
+        moveBase();
+        publishData();
     }
 }
 
@@ -375,7 +396,7 @@ bool createEntities()
 {
     syslog(LOG_INFO, "%s %lu", __FUNCTION__, millis());
     allocator = rcl_get_default_allocator();
-    //create init_options
+    // create init_options
     RCCHECK(rclc_support_init(&support, 0, NULL, &allocator));
     // create node
     RCCHECK(rclc_node_init_default(&node, NODE_NAME, "", &support));
@@ -384,8 +405,7 @@ bool createEntities()
         &odom_publisher,
         &node,
         ROSIDL_GET_MSG_TYPE_SUPPORT(nav_msgs, msg, Odometry),
-        TOPIC_PREFIX "odom/unfiltered"
-    ));
+        TOPIC_PREFIX "odom/unfiltered"));
     // create IMU publisher
     RCCHECK(rclc_publisher_init_default(
         &imu_publisher,
@@ -397,48 +417,43 @@ bool createEntities()
 #else
         TOPIC_PREFIX "imu/data"
 #endif
-    ));
+        ));
 #ifndef USE_FAKE_MAG
     RCCHECK(rclc_publisher_init_default(
         &mag_publisher,
         &node,
         ROSIDL_GET_MSG_TYPE_SUPPORT(sensor_msgs, msg, MagneticField),
-        TOPIC_PREFIX "imu/mag"
-    ));
+        TOPIC_PREFIX "imu/mag"));
 #endif
 #if defined(BATTERY_PIN) || defined(USE_INA219)
     // create battery pyblisher
     RCCHECK(rclc_publisher_init_default(
-    &battery_publisher,
-    &node,
-    ROSIDL_GET_MSG_TYPE_SUPPORT(sensor_msgs, msg, BatteryState),
-    TOPIC_PREFIX "battery"
-    ));
+        &battery_publisher,
+        &node,
+        ROSIDL_GET_MSG_TYPE_SUPPORT(sensor_msgs, msg, BatteryState),
+        TOPIC_PREFIX "battery"));
 #endif
 #ifdef ECHO_PIN
     // create range pyblisher
     RCCHECK(rclc_publisher_init_default(
-    &range_publisher,
-    &node,
-    ROSIDL_GET_MSG_TYPE_SUPPORT(sensor_msgs, msg, Range),
-    TOPIC_PREFIX "sonar"
-    ));
+        &range_publisher,
+        &node,
+        ROSIDL_GET_MSG_TYPE_SUPPORT(sensor_msgs, msg, Range),
+        TOPIC_PREFIX "sonar"));
 #endif
     // create twist command subscriber
     RCCHECK(rclc_subscription_init_default(
         &twist_subscriber,
         &node,
         ROSIDL_GET_MSG_TYPE_SUPPORT(geometry_msgs, msg, Twist),
-        TOPIC_PREFIX "cmd_vel"
-    ));
+        TOPIC_PREFIX "cmd_vel"));
 #ifdef JOINT_STATE_SUBSCRIBER
     // create joint command subscriber
     RCCHECK(rclc_subscription_init_default(
         &joint_subscriber,
         &node,
         ROSIDL_GET_MSG_TYPE_SUPPORT(sensor_msgs, msg, JointState),
-        TOPIC_PREFIX JOINT_STATE_SUBSCRIBER
-    ));
+        TOPIC_PREFIX JOINT_STATE_SUBSCRIBER));
 #endif
     // create timer for actuating the motors at 50 Hz (1000/20)
     const unsigned int control_timeout = CONTROL_TIMER;
@@ -446,24 +461,21 @@ bool createEntities()
         &control_timer,
         &support,
         RCL_MS_TO_NS(control_timeout),
-        controlCallback
-    ));
+        controlCallback));
     RCCHECK(rclc_executor_init(&executor, &support.context, 3, &allocator));
     RCCHECK(rclc_executor_add_subscription(
         &executor,
         &twist_subscriber,
         &twist_msg,
         &twistCallback,
-        ON_NEW_DATA
-    ));
+        ON_NEW_DATA));
 #ifdef JOINT_STATE_SUBSCRIBER
     RCCHECK(rclc_executor_add_subscription(
         &executor,
         &joint_subscriber,
         &joint_msg,
         &jointCallback,
-        ON_NEW_DATA
-    ));
+        ON_NEW_DATA));
 #endif
     RCCHECK(rclc_executor_add_timer(&executor, &control_timer));
 
@@ -477,8 +489,8 @@ bool createEntities()
 bool destroyEntities()
 {
     syslog(LOG_INFO, "%s %lu", __FUNCTION__, millis());
-    rmw_context_t * rmw_context = rcl_context_get_rmw_context(&support.context);
-    (void) rmw_uros_set_context_entity_destroy_session_timeout(rmw_context, 0);
+    rmw_context_t *rmw_context = rcl_context_get_rmw_context(&support.context);
+    (void)rmw_uros_set_context_entity_destroy_session_timeout(rmw_context, 0);
 
     RCSOFTCHECK(rcl_publisher_fini(&odom_publisher, &node));
     RCSOFTCHECK(rcl_publisher_fini(&imu_publisher, &node));
@@ -519,18 +531,18 @@ void setup()
 #endif
 
 #ifdef WDT_TIMEOUT
-    esp_task_wdt_init(WDT_TIMEOUT, true); //enable panic so ESP32 restarts
-    esp_task_wdt_add(NULL); //add current thread to WDT watch
+    esp_task_wdt_init(WDT_TIMEOUT, true); // enable panic so ESP32 restarts
+    esp_task_wdt_add(NULL);               // add current thread to WDT watch
 #endif
     initWifis();
     initOta();
-    i2cdetect();  // default range from 0x03 to 0x77
+    i2cdetect(); // default range from 0x03 to 0x77
     initPwm();
     motor1_controller.begin();
     motor2_controller.begin();
     motor3_controller.begin();
     motor4_controller.begin();
-    bool imu_ok = imu.init();
+    bool imu_ok = imu_sensor.init();
     if (!imu_ok) // take IMU failure as fatal
     {
         Serial.println("IMU init failed");
@@ -568,8 +580,7 @@ void setup()
     bool success = micro_ros_utilities_create_message_memory(
         ROSIDL_GET_MSG_TYPE_SUPPORT(sensor_msgs, msg, JointState),
         &joint_msg,
-        conf
-    );
+        conf);
     syslog(LOG_INFO, "%s %lu allocate msg %d", __FUNCTION__, millis(), success);
 #endif
 
@@ -585,35 +596,36 @@ void setup()
     syslog(LOG_INFO, "%s Ready %lu", __FUNCTION__, millis());
 }
 
-void loop() {
+void loop()
+{
     switch (state)
     {
-        case WAITING_AGENT:
-            EXECUTE_EVERY_N_MS(500, state = (RMW_RET_OK == rmw_uros_ping_agent(100, 1)) ? AGENT_AVAILABLE : WAITING_AGENT;);
-            break;
-        case AGENT_AVAILABLE:
-            syslog(LOG_INFO, "%s agent available %lu", __FUNCTION__, millis());
-            state = (true == createEntities()) ? AGENT_CONNECTED : WAITING_AGENT;
-            if (state == WAITING_AGENT)
-            {
-                destroyEntities();
-            }
-            break;
-        case AGENT_CONNECTED:
-            EXECUTE_EVERY_N_MS(200, state = (RMW_RET_OK == rmw_uros_ping_agent(100, 1)) ? AGENT_CONNECTED : AGENT_DISCONNECTED;);
-            if (state == AGENT_CONNECTED)
-            {
-                rclc_executor_spin_some(&executor, RCL_MS_TO_NS(100));
-            }
-            break;
-        case AGENT_DISCONNECTED:
-            syslog(LOG_INFO, "%s agent disconnected %lu", __FUNCTION__, millis());
-            fullStop();
+    case WAITING_AGENT:
+        EXECUTE_EVERY_N_MS(500, state = (RMW_RET_OK == rmw_uros_ping_agent(100, 1)) ? AGENT_AVAILABLE : WAITING_AGENT;);
+        break;
+    case AGENT_AVAILABLE:
+        syslog(LOG_INFO, "%s agent available %lu", __FUNCTION__, millis());
+        state = (true == createEntities()) ? AGENT_CONNECTED : WAITING_AGENT;
+        if (state == WAITING_AGENT)
+        {
             destroyEntities();
-            state = WAITING_AGENT;
-            break;
-        default:
-            break;
+        }
+        break;
+    case AGENT_CONNECTED:
+        EXECUTE_EVERY_N_MS(200, state = (RMW_RET_OK == rmw_uros_ping_agent(100, 1)) ? AGENT_CONNECTED : AGENT_DISCONNECTED;);
+        if (state == AGENT_CONNECTED)
+        {
+            rclc_executor_spin_some(&executor, RCL_MS_TO_NS(100));
+        }
+        break;
+    case AGENT_DISCONNECTED:
+        syslog(LOG_INFO, "%s agent disconnected %lu", __FUNCTION__, millis());
+        fullStop();
+        destroyEntities();
+        state = WAITING_AGENT;
+        break;
+    default:
+        break;
     }
     runWifis();
     runOta();
