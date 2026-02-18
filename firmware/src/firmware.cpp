@@ -442,6 +442,14 @@ bool createEntities()
 #endif
     // create timer for actuating the motors at 50 Hz (1000/20)
     const unsigned int control_timeout = CONTROL_TIMER;
+#if defined(MICRO_ROS_DISTRO_HUMBLE) || defined(MICRO_ROS_DISTRO_FOXY)
+    RCCHECK(rclc_timer_init_default(
+        &control_timer,
+        &support,
+        RCL_MS_TO_NS(control_timeout),
+        controlCallback
+    ));
+#else
     RCCHECK(rclc_timer_init_default2(
         &control_timer,
         &support,
@@ -449,6 +457,7 @@ bool createEntities()
         controlCallback,
         true
     ));
+#endif
     RCCHECK(rclc_executor_init(&executor, &support.context, 3, &allocator));
     RCCHECK(rclc_executor_add_subscription(
         &executor,
