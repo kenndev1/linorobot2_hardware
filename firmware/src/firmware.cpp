@@ -303,7 +303,6 @@ void jointCallback(const void *msgin)
 
 void publishData()
 {
-    static unsigned skip_dip = 0;
     odom_msg = odometry.getData();
     imu_msg = imu.getData();
 #ifdef USE_FAKE_IMU
@@ -340,6 +339,7 @@ void publishData()
     battery_msg.header.stamp.sec = time_stamp.tv_sec;
     battery_msg.header.stamp.nanosec = time_stamp.tv_nsec;
 #ifdef BATTERY_DIP
+    static unsigned skip_dip = 0;
     if (!skip_dip && battery_msg.voltage > 1.0  && battery_msg.voltage < prev_voltage * BATTERY_DIP) {
         RCSOFTCHECK(rcl_publish(&battery_publisher, &battery_msg, NULL));
     syslog(LOG_WARNING, "%s voltage dip %.2f", __FUNCTION__, battery_msg.voltage);
