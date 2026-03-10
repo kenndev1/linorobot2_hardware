@@ -15,62 +15,64 @@
 #define CONFIG_H
 
 #ifdef USE_VATTENKAR_CONFIG
-    #include "custom/vattenkar_config.h"
+#include "custom/vattenkar_config.h"
 #endif
 
 #ifdef USE_DEV_CONFIG
-    #include "custom/dev_config.h"
+#include "custom/dev_config.h"
 #endif
 
 #ifdef USE_GENDRV_CONFIG
-    #include "custom/gendrv_config.h"
+#include "custom/gendrv_config.h"
 #endif
 
 #ifdef USE_GENDRV_WIFI_CONFIG
-    #include "custom/gendrv_wifi_config.h"
+#include "custom/gendrv_wifi_config.h"
 #endif
 
 #ifdef USE_ESP32_CONFIG
-    #include "custom/esp32_config.h"
+#include "custom/esp32_config.h"
 #endif
 
 #ifdef USE_ESP32_WIFI_CONFIG
-    #include "custom/esp32_wifi_config.h"
+#include "custom/esp32_wifi_config.h"
 #endif
 
 #ifdef USE_ESP32S2_CONFIG
-    #include "custom/esp32s2_config.h"
+#include "custom/esp32s2_config.h"
 #endif
 
 #ifdef USE_ESP32S2_WIFI_CONFIG
-    #include "custom/esp32s2_wifi_config.h"
+#include "custom/esp32s2_wifi_config.h"
 #endif
 
 #ifdef USE_ESP32S3_CONFIG
-    #include "custom/esp32s3_config.h"
+#include "custom/esp32s3_config.h"
 #endif
 
 #ifdef USE_ESP32S3_WIFI_CONFIG
-    #include "custom/esp32s3_wifi_config.h"
+#include "custom/esp32s3_wifi_config.h"
 #endif
 
 #ifdef USE_PICO2_CONFIG
-    #include "custom/pico2_config.h"
+#include "custom/pico2_config.h"
 #endif
 
 #ifdef USE_PICO_CONFIG
-    #include "custom/pico_config.h"
+#include "custom/pico_config.h"
 #endif
 
+#ifdef USE_ROSKITO_CONFIG
+#include "custom/roskito_config.h"
+#endif
 // add maintainer configurations above this line
 // this barrier helps to reduce user merge conflict
 // add user configurations below this line
 
-
 // add user configurations above this line
 // this should be the last one
 #ifndef LINO_BASE
-    #include "lino_base_config.h"
+#include "lino_base_config.h"
 #endif
 
 #endif
