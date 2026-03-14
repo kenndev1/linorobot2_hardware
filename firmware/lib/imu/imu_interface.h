@@ -72,6 +72,12 @@ public:
         imu_msg_.header.frame_id = micro_ros_string_utilities_set(imu_msg_.header.frame_id, "imu_link");
     }
 
+    // Calibration Status of the BNO055 Sys: gyro accel mag -- Unreliable = 0  Calibrated = 3
+    virtual void readCalibration(uint8_t *sys, uint8_t *gyro, uint8_t *accel, uint8_t *mag)
+    {
+        *sys = *gyro = *accel = *mag = 0;
+    }
+
     virtual geometry_msgs__msg__Vector3 readAccelerometer() = 0;
     virtual geometry_msgs__msg__Vector3 readGyroscope() = 0;
     virtual bool startSensor() = 0;

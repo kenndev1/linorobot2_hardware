@@ -306,7 +306,7 @@ public:
             return false;
         }
         bno.setExtCrystalUse(true);
-        bno.setMode(adafruit_bno055_opmode_t::OPERATION_MODE_NDOF);
+        bno.setMode(adafruit_bno055_opmode_t::OPERATION_MODE_IMUPLUS);
         bno.setAxisRemap(Adafruit_BNO055::adafruit_bno055_axis_remap_config_t::REMAP_CONFIG_P0);
         bno.setAxisSign(Adafruit_BNO055::adafruit_bno055_axis_remap_sign_t::REMAP_SIGN_P1);
         return true;
@@ -345,6 +345,13 @@ public:
 
         return orientation_data;
     }
+
+#ifdef USE_BNO055_StatusCalib
+    void readCalibration(uint8_t *sys, uint8_t *gyro, uint8_t *accel, uint8_t *mag) override
+    {
+        bno.getCalibration(sys, gyro, accel, mag);
+    }
+#endif
 
     sensor_msgs__msg__Imu getData()
     {

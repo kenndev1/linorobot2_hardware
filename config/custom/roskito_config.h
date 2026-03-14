@@ -30,6 +30,7 @@
 //  #define IMU_TWEAK {}
 //  #define MAG_TWEAK {}
 #define USE_BNO055_IMU
+#define USE_BNO055_StatusCalib
 
 #define K_P 0.6 // P constant
 #define K_I 0.8 // I constant
@@ -51,7 +52,7 @@ ROBOT ORIENTATION
 */
 
 // define your robot' specs here
-#define MOTOR_MAX_RPM 350               // motor's max RPM
+#define MOTOR_MAX_RPM 150               // motor's max RPM
 #define MAX_RPM_RATIO 0.85              // max RPM allowed for each MAX_RPM_ALLOWED = MOTOR_MAX_RPM * MAX_RPM_RATIO
 #define MOTOR_OPERATING_VOLTAGE 12      // motor's operating voltage (used to calculate max RPM)
 #define MOTOR_POWER_MAX_VOLTAGE 12      // max voltage of the motor's power source (used to calculate max RPM)
@@ -60,8 +61,8 @@ ROBOT ORIENTATION
 #define COUNTS_PER_REV2 900             // wheel2 encoder's no of ticks per rev
 #define COUNTS_PER_REV3 900             // wheel3 encoder's no of ticks per rev
 #define COUNTS_PER_REV4 900             // wheel4 encoder's no of ticks per rev
-#define WHEEL_DIAMETER 0.097            // wheel's diameter in meters
-#define LR_WHEELS_DISTANCE 0.2619       // distance between left and right wheels
+#define WHEEL_DIAMETER 0.0560           // wheel's diameter in meters
+#define LR_WHEELS_DISTANCE 0.224        // distance between left and right wheels
 #define PWM_BITS 10                     // PWM Resolution of the microcontroller
 #define PWM_FREQUENCY 20000             // PWM Frequency
 #define SERVO_BITS 12                   // Servo PWM resolution
@@ -69,15 +70,15 @@ ROBOT ORIENTATION
 
 // INVERT ENCODER COUNTS
 #define MOTOR1_ENCODER_INV false
-#define MOTOR2_ENCODER_INV false
+#define MOTOR2_ENCODER_INV false // true
 #define MOTOR3_ENCODER_INV false
-#define MOTOR4_ENCODER_INV false
+#define MOTOR4_ENCODER_INV false // true
 
 // INVERT MOTOR DIRECTIONS
 #define MOTOR1_INV false
-#define MOTOR2_INV false
+#define MOTOR2_INV false // true
 #define MOTOR3_INV false
-#define MOTOR4_INV false
+#define MOTOR4_INV false // true
 
 // ENCODER PINS
 // Note: encoder pins must be consecutive (e.g. 2 and 3, 10 and 11 etc.)
@@ -95,44 +96,23 @@ ROBOT ORIENTATION
 
 // MOTOR PINS
 #ifdef USE_BTS7960_MOTOR_DRIVER
-#define MOTOR1_PWM -1 // DON'T TOUCH THIS! This is just a placeholder
-#define MOTOR1_IN_A 12
-#define MOTOR1_IN_B 13
+#define MOTOR1_PWM -1  // DON'T TOUCH THIS! This is just a placeholder
+#define MOTOR1_IN_A 12 // 8
+#define MOTOR1_IN_B 13 // 7
 
-#define MOTOR2_PWM -1 // DON'T TOUCH THIS! This is just a placeholder
-#define MOTOR2_IN_A 14
-#define MOTOR2_IN_B 15
+#define MOTOR2_PWM -1  // DON'T TOUCH THIS! This is just a placeholder
+#define MOTOR2_IN_A 14 // 12
+#define MOTOR2_IN_B 15 // 13
 
-#define MOTOR3_PWM -1 // DON'T TOUCH THIS! This is just a placeholder
-#define MOTOR3_IN_A 16
-#define MOTOR3_IN_B 17
+#define MOTOR3_PWM -1  // DON'T TOUCH THIS! This is just a placeholder
+#define MOTOR3_IN_A 16 // 19
+#define MOTOR3_IN_B 17 // 18
 
-#define MOTOR4_PWM -1 // DON'T TOUCH THIS! This is just a placeholder
-#define MOTOR4_IN_A 18
-#define MOTOR4_IN_B 19
+#define MOTOR4_PWM -1  // DON'T TOUCH THIS! This is just a placeholder
+#define MOTOR4_IN_A 18 // 17
+#define MOTOR4_IN_B 19 //
 
 #define PWM_MAX pow(2, PWM_BITS) - 1
-#define PWM_MIN -PWM_MAX
-#endif
-
-#ifdef USE_ESC_MOTOR_DRIVER
-#define MOTOR1_PWM 12
-#define MOTOR1_IN_A -1 // DON'T TOUCH THIS! This is just a placeholder
-#define MOTOR1_IN_B -1 // DON'T TOUCH THIS! This is just a placeholder
-
-#define MOTOR2_PWM 13
-#define MOTOR2_IN_A -1 // DON'T TOUCH THIS! This is just a placeholder
-#define MOTOR2_IN_B -1 // DON'T TOUCH THIS! This is just a placeholder
-
-#define MOTOR3_PWM 14
-#define MOTOR3_IN_A -1 // DON'T TOUCH THIS! This is just a placeholder
-#define MOTOR3_IN_B -1 // DON'T TOUCH THIS! This is just a placeholder
-
-#define MOTOR4_PWM 15
-#define MOTOR4_IN_A -1 // DON'T TOUCH THIS! This is just a placeholder
-#define MOTOR4_IN_B -1 // DON'T TOUCH THIS! This is just a placeholder
-
-#define PWM_MAX 400
 #define PWM_MIN -PWM_MAX
 #endif
 
@@ -154,11 +134,9 @@ ROBOT ORIENTATION
 #define LIDAR_SERVER {192, 168, 1, 100} // eg IP of the desktop computer
 #define LIDAR_PORT 8889
 #define BAUDRATE 921600
-
 #define SDA_PIN 4 // specify I2C pins
 #define SCL_PIN 5
-
-#define NODE_NAME "roskito_pico2"
+#define NODE_NAME "pico2"
 // #define TOPIC_PREFIX "pico2/"
 // #define CONTROL_TIMER 20
 // #define BATTERY_TIMER 2000

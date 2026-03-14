@@ -47,6 +47,15 @@
 #include "ota.h"
 #include "pwm.h"
 
+#ifdef USE_BNO055_StatusCalib
+#include <std_msgs/msg/string.h>
+
+rcl_publisher_t calib_publisher;
+std_msgs__msg__String calib_msg;
+
+char calib_buffer[64];
+#endif
+
 #ifdef WDT_TIMEOUT
 #include <esp_task_wdt.h>
 #endif
@@ -418,6 +427,13 @@ bool createEntities()
         TOPIC_PREFIX "imu/data"
 #endif
         ));
+#ifdef USE_BNO055_StatusCalib
+    RCCHECK(rclc_publisher_init_default(
+        &calib_publisher,
+        &node,
+        ROSIDL_GET_MSG_TYPE_SUPPORT(std_msgs, msg, String),
+        TOPIC_PREFIX "imu/status_calib"));
+#endif
 #ifndef USE_FAKE_MAG
     RCCHECK(rclc_publisher_init_default(
         &mag_publisher,
@@ -506,6 +522,11 @@ bool destroyEntities()
 #ifndef USE_FAKE_MAG
     RCSOFTCHECK(rcl_publisher_fini(&mag_publisher, &node));
 #endif
+
+#ifdef USE_BNO055_StatusCalib
+    RCSOFTCHECK(rcl_publisher_fini(&calib_publisher, &node));
+#endif
+
 #if defined(BATTERY_PIN) || defined(USE_INA219)
     RCSOFTCHECK(rcl_publisher_fini(&battery_publisher, &node));
 #endif
@@ -643,5 +664,32 @@ void loop()
 #endif
 #ifdef BOARD_LOOP // board specific loop
     BOARD_LOOP
+#endif
+
+#ifdef USE_BNO055_StatusCalib
+    if (state == AGENT_CONNECTED)
+    {
+
+        static unsigned long last_calib_time = 0;
+        if (millis() - last_calib_time > 1000)
+        {
+            uint8_t s, g, a, m;
+
+            imu_sensor.readCalibration(&s, &g, &a, &m);
+
+            int len = snprintf(calib_buffer, sizeof(calib_buffer),
+                               "sys: %u gyro: %u accel: %u mag: %u",
+                               s, g, a, m);
+
+            if (len > 0)
+            {
+                calib_msg.data.data = calib_buffer;
+                calib_msg.data.size = len;
+                calib_msg.data.capacity = sizeof(calib_buffer);
+                RCSOFTCHECK(rcl_publish(&calib_publisher, &calib_msg, NULL));
+            }
+            last_calib_time = millis();
+        }
+    }
 #endif
 }
